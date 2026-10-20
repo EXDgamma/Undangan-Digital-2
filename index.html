@@ -1,0 +1,1609 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Fiqa &amp; Fajri — Undangan Pernikahan</title>
+    <meta name="theme-color" content="#FCE8E8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"
+    />
+    <style>
+      /* =========================================================
+   1. WARNA & HURUF
+   ========================================================= */
+      :root {
+        /* Palet dari prompt versi 2 */
+        --ivory: #fff9f8;
+        --blush: #fce8e8;
+        --rose: #eaa4b4;
+        --dusty: #d78d9f;
+        --mauve: #e8c7c8;
+        --ink: #181516;
+        --sage: #94a66d;
+        --rose-ink: #9e5468; /* rose tua khusus teks, kontras ±5:1 */
+
+        /* Teks yang menempel langsung di lukisan.
+     Lukisannya selalu terang, jadi warna ini tidak ikut mode gelap. */
+        --on-art: #181516;
+        --on-art-soft: #4e3e43;
+        --on-art-accent: #9e5468;
+        --on-art-wash: rgba(255, 249, 248, 0.86);
+
+        /* Kartu acara dan tombol navigasi: mengikuti mode terang/gelap perangkat */
+        --card-bg: rgba(255, 249, 248, 0.94);
+        --card-text: #181516;
+        --card-soft: #5a474c;
+        --card-accent: #9e5468;
+        --card-rule: rgba(215, 141, 159, 0.6);
+        --card-shadow: rgba(120, 62, 80, 0.18);
+        --btn-bg: #9e5468;
+        --btn-text: #fff9f8;
+        --page-bg: #f2e2e3;
+        --focus: #9e5468;
+
+        --font-script:
+          "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
+        --font-display:
+          "Cormorant Garamond", Cormorant, Garamond, "Times New Roman", serif;
+        --font-text: Lora, Georgia, "Times New Roman", serif;
+
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --card-bg: rgba(38, 27, 31, 0.94);
+          --card-text: #f8edee;
+          --card-soft: #d6c3c7;
+          --card-accent: #efb3c1;
+          --card-rule: rgba(234, 164, 180, 0.42);
+          --card-shadow: rgba(0, 0, 0, 0.35);
+          --btn-bg: #efb3c1;
+          --btn-text: #2a1d21;
+          --page-bg: #161012;
+          --focus: #efb3c1;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --card-bg: rgba(38, 27, 31, 0.94);
+        --card-text: #f8edee;
+        --card-soft: #d6c3c7;
+        --card-accent: #efb3c1;
+        --card-rule: rgba(234, 164, 180, 0.42);
+        --card-shadow: rgba(0, 0, 0, 0.35);
+        --btn-bg: #efb3c1;
+        --btn-text: #2a1d21;
+        --page-bg: #161012;
+        --focus: #efb3c1;
+        color-scheme: dark;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: inherit;
+      }
+      html {
+        height: 100%;
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+        overscroll-behavior: none;
+      }
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        overscroll-behavior: none;
+        background: var(--page-bg);
+        color: var(--card-text);
+        font-family: var(--font-text);
+        -webkit-font-smoothing: antialiased;
+      }
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+      }
+
+      /* =========================================================
+   2. PANGGUNG: kanvas lukisan + lapisan di atasnya
+   ========================================================= */
+      .app {
+        position: relative;
+        height: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        overflow: hidden;
+        background: var(--ivory);
+        -webkit-tap-highlight-color: transparent;
+      }
+      @media (min-width: 540px) {
+        .app {
+          box-shadow:
+            0 0 0 1px rgba(158, 84, 104, 0.14),
+            0 24px 70px rgba(90, 40, 55, 0.2);
+        }
+      }
+      .stage {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+        cursor: pointer;
+      }
+      /* Butiran kertas: lapisan diam di atas lukisan, tidak ikut di-zoom */
+      .grain {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.3;
+        mix-blend-mode: multiply;
+        background-size: 180px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .42 0 0 0 0 .4 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          120% 85% at 50% 45%,
+          rgba(215, 141, 159, 0) 62%,
+          rgba(215, 141, 159, 0.16) 100%
+        );
+      }
+
+      /* Titik yang bisa diketuk di lukisan */
+      .hotspots {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .hotspot {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 7px;
+        padding: 6px;
+        border: 0;
+        background: none;
+        color: var(--on-art);
+        font: 500 14px/1.2 var(--font-text);
+        cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: auto;
+        transition:
+          opacity 0.45s ease,
+          visibility 0.45s;
+      }
+      .hotspot.is-shown {
+        opacity: 1;
+        visibility: visible;
+      }
+      .hotspot__dot {
+        position: relative;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--on-art-accent);
+        box-shadow: 0 0 0 3px var(--ivory);
+      }
+      .hotspot__dot::after {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        border: 2px solid var(--on-art-accent);
+        animation: ping 2.4s ease-out infinite;
+      }
+      @keyframes ping {
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        75%,
+        100% {
+          transform: scale(2.6);
+          opacity: 0;
+        }
+      }
+      .hotspot__label {
+        padding: 4px 12px 5px;
+        border-radius: 999px;
+        background: var(--on-art-wash);
+        border: 1px solid rgba(215, 141, 159, 0.55);
+        white-space: nowrap;
+      }
+
+      /* =========================================================
+   3. TEKS TIAP SCENE
+   ========================================================= */
+      .panel {
+        position: absolute;
+        left: 50%;
+        width: min(100% - 28px, 420px);
+        text-align: center;
+        opacity: 0;
+        transform: translate(-50%, -12px);
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+      .panel.is-visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      /* Teks di langit (sampul & penutup): tanpa kotak, hanya sapuan warna lembut */
+      .panel--art {
+        top: 20px;
+        width: min(100% - 56px, 400px);
+        padding: 36px 16px 38px;
+        color: var(--on-art);
+        background: radial-gradient(
+          closest-side,
+          var(--on-art-wash) 0%,
+          var(--on-art-wash) 58%,
+          rgba(255, 249, 248, 0) 100%
+        );
+      }
+
+      /* Kartu acara di bagian atas layar, melengkung seperti jendela.
+   Bangunan yang sedang disorot tampil di bawahnya. */
+      .panel--card {
+        top: 14px;
+        padding: 48px 26px 24px;
+        color: var(--card-text);
+        background: var(--card-bg);
+        border-radius: 50% 50% 18px 18px / 92px 92px 18px 18px;
+        box-shadow: 0 18px 44px var(--card-shadow);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+      }
+      .panel--card::before {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border: 1px solid var(--card-rule);
+        border-radius: 50% 50% 13px 13px / 86px 86px 13px 13px;
+        pointer-events: none;
+      }
+
+      .chapter {
+        margin: 0;
+        font: italic 500 19px/1.35 var(--font-display);
+        color: var(--card-accent);
+      }
+      .panel--art .chapter {
+        color: var(--on-art-accent);
+      }
+      .names {
+        margin: 6px 0 4px;
+        font: 400 clamp(46px, 14vw, 62px)/1.08 var(--font-script);
+        color: var(--on-art-accent);
+      }
+      .names--small {
+        margin: 4px 0 2px;
+        font-size: 42px;
+      }
+      .cover-date {
+        margin: 0;
+        font: 600 20px/1.4 var(--font-display);
+        color: var(--on-art);
+      }
+      .guest-label {
+        margin: 18px 0 0;
+        font: italic 400 15px/1.4 var(--font-text);
+        color: var(--on-art-soft);
+      }
+      .guest-name {
+        margin: 2px 0 18px;
+        font: 600 22px/1.3 var(--font-display);
+        color: var(--on-art);
+        overflow-wrap: anywhere;
+      }
+      .event-title {
+        margin: 2px 0 0;
+        font: 600 32px/1.15 var(--font-display);
+        color: var(--card-text);
+      }
+      .event-date {
+        margin: 8px 0 10px;
+        font: 600 20px/1.35 var(--font-display);
+        color: var(--card-accent);
+      }
+      .event-info {
+        margin: 0 0 18px;
+        font: 400 16px/1.65 var(--font-text);
+        color: var(--card-soft);
+      }
+      .quote {
+        max-width: 31ch;
+        margin: 10px auto 4px;
+        font: italic 400 16px/1.7 var(--font-text);
+        color: var(--on-art);
+      }
+      .source {
+        margin: 0;
+        font: 500 16px/1.4 var(--font-display);
+        color: var(--on-art-soft);
+      }
+      .hint {
+        max-width: 28ch;
+        margin: 8px auto 0;
+        font: 400 14px/1.55 var(--font-text);
+        color: var(--on-art-soft);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 26px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        font: 500 16px/1 var(--font-text);
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn--line {
+        background: transparent;
+        color: var(--card-accent);
+        border: 1px solid var(--card-rule);
+      }
+
+      /* =========================================================
+   4. NAVIGASI BAWAH
+   ========================================================= */
+      .controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 0.6s ease,
+          visibility 0.6s;
+      }
+      .app.is-open .controls {
+        opacity: 1;
+        visibility: visible;
+      }
+      .nav-btn {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        border: 1px solid var(--card-rule);
+        border-radius: 50%;
+        background: var(--card-bg);
+        color: var(--card-accent);
+        cursor: pointer;
+      }
+      .nav-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+      .nav-btn[hidden] {
+        display: none;
+      }
+
+      /* Tombol musik: ikon berganti sesuai keadaan */
+      .music-btn {
+        margin-left: 6px;
+      }
+      .music-btn .icon-on,
+      .music-btn.is-playing .icon-off {
+        display: none;
+      }
+      .music-btn.is-playing .icon-on {
+        display: block;
+      }
+      .dots {
+        display: flex;
+        gap: 12px;
+        padding: 13px 16px;
+        border: 1px solid var(--card-rule);
+        border-radius: 999px;
+        background: var(--card-bg);
+      }
+      .dot {
+        position: relative;
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border: 1px solid var(--card-accent);
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+      }
+      .dot::before {
+        content: "";
+        position: absolute;
+        inset: -10px;
+      }
+      .dot[aria-current="step"] {
+        background: var(--card-accent);
+      }
+
+      /* Layar pemuatan */
+      .loading {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: var(--ivory);
+        color: var(--on-art-soft);
+        font: italic 500 21px/1.4 var(--font-display);
+        transition:
+          opacity 0.9s ease,
+          visibility 0.9s;
+      }
+      .loading.is-done {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .panel,
+        .controls,
+        .hotspot,
+        .loading {
+          transition: none;
+        }
+        .hotspot__dot::after {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <canvas
+        class="stage"
+        id="stage"
+        role="img"
+        aria-label="Lukisan taman bunga dengan masjid, paviliun, dan rumah joglo"
+      ></canvas>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="hotspots" id="hotspots"></div>
+
+      <!-- Scene 0: sampul -->
+      <section class="panel panel--art" data-panel="0" inert>
+        <p class="chapter">Undangan pernikahan</p>
+        <h1 class="names">Fiqa &amp; Fajri</h1>
+        <p class="cover-date">Jumat, 25 Desember 2026</p>
+        <p class="guest-label">Kepada Yth.</p>
+        <p class="guest-name" id="guestName">Bapak/Ibu/Saudara/i</p>
+        <button class="btn" id="openBtn" type="button">Buka undangan</button>
+      </section>
+
+      <!-- Scene 1: akad -->
+      <section class="panel panel--card" data-panel="1" inert>
+        <p class="chapter">Babak pertama</p>
+        <h2 class="event-title">Akad Nikah</h2>
+        <p class="event-date">Jumat, 25 Desember 2026</p>
+        <p class="event-info">
+          Pukul 14.00 WIB<br />Kediaman Mempelai Wanita<br />Desa Sarang Burung
+        </p>
+        <a
+          class="btn btn--line"
+          href="https://maps.app.goo.gl/5JqNsekftLjF59LX8"
+          target="_blank"
+          rel="noopener"
+          >Lihat lokasi</a
+        >
+      </section>
+
+      <!-- Scene 2: resepsi -->
+      <section class="panel panel--card" data-panel="2" inert>
+        <p class="chapter">Babak kedua</p>
+        <h2 class="event-title">Resepsi Pernikahan</h2>
+        <p class="event-date">Minggu, 3 Januari 2027</p>
+        <p class="event-info">
+          Pukul 08.00 WIB<br />Kediaman Mempelai Wanita<br />Desa Sarang Burung
+        </p>
+        <a
+          class="btn btn--line"
+          href="https://maps.app.goo.gl/5JqNsekftLjF59LX8"
+          target="_blank"
+          rel="noopener"
+          >Lihat lokasi</a
+        >
+      </section>
+
+      <!-- Scene 3: ngunduh mantu -->
+      <section class="panel panel--card" data-panel="3" inert>
+        <p class="chapter">Babak ketiga</p>
+        <h2 class="event-title">Ngunduh Mantu</h2>
+        <p class="event-date">Minggu, 10 Januari 2027</p>
+        <p class="event-info">
+          Pukul 08.00 WIB<br />Kediaman keluarga mempelai pria<br />Desa Sarang
+          Burung
+        </p>
+        <a
+          class="btn btn--line"
+          href="https://maps.app.goo.gl/ezX1DtLdkWsJBDNQ7"
+          target="_blank"
+          rel="noopener"
+          >Lihat lokasi</a
+        >
+      </section>
+
+      <!-- Scene 4: penutup -->
+      <section class="panel panel--art" data-panel="4" inert>
+        <p class="chapter">Sampai jumpa di hari bahagia kami</p>
+        <p class="quote">
+          “Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu
+          pasangan hidup dari jenismu sendiri, agar kamu merasa tenteram
+          kepadanya.”
+        </p>
+        <p class="source">QS. Ar-Rum: 21</p>
+        <p class="names names--small">Fiqa &amp; Fajri</p>
+        <p class="hint">
+          Ketuk bangunan di lukisan untuk membuka kembali tiap acara.
+        </p>
+      </section>
+
+      <nav class="controls" aria-label="Navigasi cerita">
+        <button
+          class="nav-btn"
+          id="prevBtn"
+          type="button"
+          aria-label="Bagian sebelumnya"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M15 6l-6 6 6 6" />
+          </svg>
+        </button>
+        <div class="dots" id="dots"></div>
+        <button
+          class="nav-btn"
+          id="nextBtn"
+          type="button"
+          aria-label="Bagian berikutnya"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+        <!-- Tombol musik: tersembunyi sampai MUSIC_URL diisi -->
+        <button
+          class="nav-btn music-btn"
+          id="musicBtn"
+          type="button"
+          aria-label="Putar musik"
+          aria-pressed="false"
+          hidden
+        >
+          <svg
+            class="icon-off"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 9v6h4l5 4V5L8 9H4z" />
+            <path d="M17 9.5l5 5M22 9.5l-5 5" />
+          </svg>
+          <svg
+            class="icon-on"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 9v6h4l5 4V5L8 9H4z" />
+            <path d="M16.5 9a4 4 0 0 1 0 6" />
+            <path d="M19 6.5a7.5 7.5 0 0 1 0 11" />
+          </svg>
+        </button>
+      </nav>
+
+      <!-- Pemutar musik (tidak terlihat). Alamat filenya diatur lewat MUSIC_URL. -->
+      <audio id="music" loop preload="auto"></audio>
+
+      <div class="loading" id="loading">Menyiapkan lukisan…</div>
+    </div>
+
+    <script>
+      /* =========================================================
+   A. DATA SCENE
+   Lukisan memakai koordinat 1000 × 2000 (potret, 1 : 2).
+   x, y : titik di lukisan yang ingin disorot
+   zoom : 1 = seluruh lukisan, 2.4 = 2,4 kali lebih dekat
+   Semua teks tampil di bagian atas layar, jadi titik yang disorot
+   otomatis ditempatkan di bagian bawah layar (lihat cameraFor).
+   ========================================================= */
+      const PAINT_W = 1000;
+      const PAINT_H = 2000;
+
+      const SCENES = [
+        { name: "Sampul", x: 500, y: 1000, zoom: 1 },
+        { name: "Akad nikah", x: 300, y: 960, zoom: 2.4 },
+        { name: "Resepsi", x: 700, y: 1300, zoom: 2.2 },
+        { name: "Ngunduh mantu", x: 520, y: 1735, zoom: 2.3 },
+        { name: "Penutup", x: 500, y: 1000, zoom: 1 },
+      ];
+
+      // Titik di lukisan yang bisa diketuk, masing-masing menuju satu scene
+      const HOTSPOTS = [
+        { scene: 1, x: 300, y: 960 },
+        { scene: 2, x: 700, y: 1300 },
+        { scene: 3, x: 500, y: 1700 },
+      ];
+
+      // Kalau lukisan asli sudah ada, isi dengan nama filenya, misalnya 'lukisan.webp'.
+      // Ukurannya sebaiknya 2000 × 4000 piksel (rasio 1 : 2, sama dengan koordinat di atas).
+      const PAINTING_URL = null;
+
+      // Isi dengan nama file musik, misalnya 'musik.mp3'. Selama masih null, tombol musik tidak muncul.
+      const MUSIC_URL = "musik.mp3";
+
+      /* =========================================================
+   B. LUKISAN SEMENTARA
+   Digambar dengan SVG, lalu "dipotret" sekali menjadi gambar.
+   Semua bagian ini nanti tidak dipakai lagi kalau PAINTING_URL diisi.
+   ========================================================= */
+      function paintingSVG(scale) {
+        let seed = 20261225;
+        const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+        const r = (a, b) => a + rand() * (b - a);
+        const f = (n) => Math.round(n * 10) / 10;
+        const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+
+        const TONES = {
+          blush: { g: "pBlush", c: "cBlush", edge: "#D88A9D" },
+          dusty: { g: "pDusty", c: "cDusty", edge: "#B86A80" },
+          rose: { g: "pRose", c: "cRose", edge: "#CF7F94" },
+          ivory: { g: "pIvory", c: "cIvory", edge: "#D3B1B1" },
+          mauve: { g: "pMauve", c: "cMauve", edge: "#B98F98" },
+        };
+        const GRADS = {
+          Blush: ["#E39DAF", "#F4C7D1", "#FFF4F3"],
+          Dusty: ["#C47188", "#DC9AAC", "#F5D6DD"],
+          Rose: ["#D98299", "#EAA4B4", "#FBE2E7"],
+          Ivory: ["#E2C3C3", "#F5E6E3", "#FFFFFF"],
+          Mauve: ["#C59BA5", "#E2C2C6", "#FAEFEF"],
+        };
+
+        // --- bentuk dasar ---
+        const petal = (l, w) =>
+          `M0 0C${f(-w)} ${f(-l * 0.2)} ${f(-w * 1.25)} ${f(-l * 0.8)} ${f(-w * 0.45)} ${f(-l)}` +
+          `Q0 ${f(-l * 0.9)} ${f(w * 0.45)} ${f(-l)}C${f(w * 1.25)} ${f(-l * 0.8)} ${f(w)} ${f(-l * 0.2)} 0 0Z`;
+
+        function leaf(x, y, len, angle, tone = 0) {
+          return (
+            `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(angle)})">` +
+            `<path d="M0 0Q${f(len * 0.45)} ${f(-len * 0.34)} ${f(len)} 0Q${f(len * 0.45)} ${f(len * 0.34)} 0 0Z" fill="url(#leaf${tone ? "B" : "A"})" fill-opacity=".82"/>` +
+            `<path d="M${f(len * 0.05)} 0Q${f(len * 0.5)} ${f(-len * 0.05)} ${f(len * 0.9)} 0" fill="none" stroke="#F4F2E6" stroke-opacity=".55" stroke-width="1.4"/></g>`
+          );
+        }
+
+        function sprig(x, y, len, angle, bend = 0.2, leaves = 6, tone = 0) {
+          const cx = len / 2,
+            cy = len * bend;
+          let s =
+            `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(angle)})">` +
+            `<path d="M0 0Q${f(cx)} ${f(cy)} ${f(len)} 0" fill="none" stroke="#7E9157" stroke-opacity=".7" stroke-width="2.2" stroke-linecap="round"/>`;
+          for (let i = 1; i <= leaves; i++) {
+            const t = i / (leaves + 1) + 0.04;
+            const px = 2 * (1 - t) * t * cx + t * t * len;
+            const py = 2 * (1 - t) * t * cy;
+            const ang =
+              (Math.atan2(
+                2 * (1 - t) * cy - 2 * t * cy,
+                2 * (1 - t) * cx + 2 * t * (len - cx),
+              ) *
+                180) /
+              Math.PI;
+            s += leaf(
+              px,
+              py,
+              len * 0.17 * (1.15 - t * 0.5),
+              ang + (i % 2 ? -42 : 42),
+              tone,
+            );
+          }
+          return s + leaf(len, 0, len * 0.14, 0, tone) + "</g>";
+        }
+
+        function peony(x, y, size, tone) {
+          const t = TONES[tone];
+          let s = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(r(0, 360))})" filter="url(#wc)">`;
+          [
+            [10, 1, 0.44, 0.5],
+            [8, 0.8, 0.38, 0.62],
+            [7, 0.6, 0.32, 0.72],
+            [5, 0.4, 0.26, 0.85],
+          ].forEach(([n, lf, wf, op], k) => {
+            for (let i = 0; i < n; i++) {
+              s +=
+                `<path d="${petal(size * lf * r(0.9, 1.08), size * wf)}" transform="rotate(${f((i * 360) / n + k * 17 + r(-8, 8))})" ` +
+                `fill="url(#${t.g})" fill-opacity="${op}" stroke="${t.edge}" stroke-opacity=".28" stroke-width="1.2"/>`;
+            }
+          });
+          return (
+            s +
+            `<circle r="${f(size * 0.12)}" fill="${t.edge}" opacity=".45"/></g>`
+          );
+        }
+
+        function rose(x, y, size, tone) {
+          const t = TONES[tone];
+          let s = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(r(0, 360))})" filter="url(#wc)">`;
+          for (let i = 0; i < 6; i++) {
+            s += `<path d="${petal(size, size * 0.62)}" transform="rotate(${f(i * 60 + r(-10, 10))})" fill="url(#${t.g})" fill-opacity=".5"/>`;
+          }
+          s += `<circle r="${f(size * 0.62)}" fill="url(#${t.c})" fill-opacity=".92"/>`;
+          for (let i = 0; i < 4; i++) {
+            const rr = size * (0.52 - i * 0.11);
+            s +=
+              `<path d="M${f(-rr)} 0A${f(rr)} ${f(rr * 0.9)} 0 0 1 ${f(rr * 0.8)} ${f(-rr * 0.45)}" transform="rotate(${i * 95})" ` +
+              `fill="none" stroke="${t.edge}" stroke-opacity=".55" stroke-width="${f(size * 0.05)}" stroke-linecap="round"/>`;
+          }
+          return s + "</g>";
+        }
+
+        function blossom(x, y, size, color) {
+          let s = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(r(0, 72))})" opacity=".85">`;
+          for (let i = 0; i < 5; i++) {
+            s += `<ellipse cy="${f(-size * 0.55)}" rx="${f(size * 0.36)}" ry="${f(size * 0.5)}" transform="rotate(${i * 72})" fill="${color}"/>`;
+          }
+          return s + `<circle r="${f(size * 0.22)}" fill="#E6C7A3"/></g>`;
+        }
+
+        function bud(x, y, size, angle, tone) {
+          const t = TONES[tone];
+          return (
+            `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(angle)})" filter="url(#wc)">` +
+            `<path d="M0 0Q${f(-size * 0.6)} ${f(-size * 0.7)} 0 ${f(-size * 1.4)}Q${f(size * 0.6)} ${f(-size * 0.7)} 0 0Z" fill="url(#${t.g})" fill-opacity=".88"/>` +
+            leaf(0, 0, size * 0.7, -60) +
+            leaf(0, 0, size * 0.7, -120) +
+            "</g>"
+          );
+        }
+
+        // Rangkaian bunga besar untuk pojok
+        function bouquet(x, y, s, flip = 1, rot = 0) {
+          let g = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)}) scale(${f(s * flip)} ${f(s)})">`;
+          for (let i = 0; i < 8; i++)
+            g += sprig(
+              0,
+              0,
+              r(150, 230),
+              i * 45 + r(-15, 15),
+              r(-0.25, 0.25),
+              5,
+              i % 2,
+            );
+          for (let i = 0; i < 9; i++)
+            g += leaf(r(-60, 60), r(-60, 60), r(50, 80), r(0, 360), i % 2);
+          for (let i = 0; i < 4; i++)
+            g += bud(
+              r(-150, 150),
+              r(-150, 150),
+              r(18, 26),
+              r(0, 360),
+              pick(["blush", "dusty", "rose"]),
+            );
+          for (let i = 0; i < 9; i++)
+            g += blossom(
+              r(-140, 140),
+              r(-130, 130),
+              r(9, 14),
+              pick(["#FFFFFF", "#F6D3DA", "#E8C7C8"]),
+            );
+          g += peony(34, -84, 46, "mauve");
+          g += peony(-50, -70, 36, "rose");
+          g += rose(-82, 30, 42, "ivory");
+          g += rose(88, 38, 46, "dusty");
+          g += peony(0, 0, 78, "blush");
+          return g + "</g>";
+        }
+
+        // Rangkaian kecil untuk menghias bangunan
+        function posy(x, y, s, tone = "blush") {
+          let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})">`;
+          for (let i = 0; i < 6; i++)
+            g += leaf(0, 0, r(55, 75), i * 60 + r(-15, 15), i % 2);
+          g += blossom(-40, 10, 13, "#FFFFFF") + blossom(42, 6, 12, "#F6D3DA");
+          g += bud(20, -40, 20, r(-20, 20), "dusty");
+          return g + rose(0, 0, 38, tone) + "</g>";
+        }
+
+        function tree(x, y, size, kind) {
+          let s =
+            `<g transform="translate(${f(x)} ${f(y)})">` +
+            `<path d="M0 0L0 ${f(-size * 0.9)}" stroke="#9A7F6E" stroke-width="${f(size * 0.07)}" stroke-linecap="round" opacity=".7"/>`;
+          if (kind === "cypress") {
+            s +=
+              `<path d="M0 ${f(-size * 2.4)}C${f(size * 0.45)} ${f(-size * 1.7)} ${f(size * 0.42)} ${f(-size * 0.5)} 0 ${f(-size * 0.25)}` +
+              `C${f(-size * 0.42)} ${f(-size * 0.5)} ${f(-size * 0.45)} ${f(-size * 1.7)} 0 ${f(-size * 2.4)}Z" fill="#9DAE7C" opacity=".75" filter="url(#wcS)"/>`;
+          } else {
+            s += '<g filter="url(#wcS)">';
+            for (let i = 0; i < 7; i++) {
+              s +=
+                `<circle cx="${f(r(-size * 0.45, size * 0.45))}" cy="${f(-size * 1.05 + r(-size * 0.35, size * 0.3))}" r="${f(size * r(0.3, 0.45))}" ` +
+                `fill="${pick(["#A9B987", "#94A66D", "#BFCB9F"])}" opacity=".5"/>`;
+            }
+            s += "</g>";
+          }
+          return s + "</g>";
+        }
+
+        function bush(x, y, wid, flowers, color) {
+          let s = '<g filter="url(#wcS)">';
+          for (let i = 0; i < 6; i++) {
+            s +=
+              `<ellipse cx="${f(x + r(-wid / 2, wid / 2))}" cy="${f(y - r(5, 25))}" rx="${f(r(wid * 0.18, wid * 0.3))}" ry="${f(r(16, 26))}" ` +
+              `fill="${pick(["#A9B987", "#B9C79A", "#94A66D"])}" opacity=".55"/>`;
+          }
+          s += "</g>";
+          for (let i = 0; i < flowers; i++)
+            s += blossom(
+              x + r(-wid / 2, wid / 2),
+              y - r(10, 38),
+              r(6, 9),
+              pick([color, "#FFFFFF", "#F6D3DA"]),
+            );
+          return s;
+        }
+
+        // Garis halus melalui beberapa titik (Catmull-Rom → kurva Bézier)
+        function smooth(pts) {
+          let d = `M${pts[0][0]} ${pts[0][1]}`;
+          for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[i - 1] || pts[i],
+              p1 = pts[i],
+              p2 = pts[i + 1],
+              p3 = pts[i + 2] || p2;
+            d +=
+              `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ` +
+              `${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${p2[0]} ${p2[1]}`;
+          }
+          return d;
+        }
+
+        // --- definisi warna & efek cat air ---
+        const defs =
+          "<defs>" +
+          '<linearGradient id="sky" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1000">' +
+          '<stop offset="0" stop-color="#F5D3DB"/><stop offset=".4" stop-color="#FBE5E7"/><stop offset=".8" stop-color="#FFF6F4"/><stop offset="1" stop-color="#FFF9F8"/></linearGradient>' +
+          '<linearGradient id="ground" gradientUnits="userSpaceOnUse" x1="0" y1="900" x2="0" y2="2000">' +
+          '<stop offset="0" stop-color="#E3EAD0"/><stop offset=".35" stop-color="#EFF0E2"/><stop offset="1" stop-color="#F8F0EA"/></linearGradient>' +
+          '<radialGradient id="sun"><stop offset="0" stop-color="#FCE3D6" stop-opacity=".95"/><stop offset="1" stop-color="#FCE3D6" stop-opacity="0"/></radialGradient>' +
+          '<radialGradient id="dome" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#F7E6EA"/><stop offset=".55" stop-color="#E0B4C0"/><stop offset="1" stop-color="#C98E9F"/></radialGradient>' +
+          '<linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDB9C6"/><stop offset="1" stop-color="#CF8599"/></linearGradient>' +
+          '<linearGradient id="leafA"><stop offset="0" stop-color="#7D9358"/><stop offset="1" stop-color="#B0BF8C"/></linearGradient>' +
+          '<linearGradient id="leafB"><stop offset="0" stop-color="#98AC77"/><stop offset="1" stop-color="#CAD4AE"/></linearGradient>' +
+          Object.entries(GRADS)
+            .map(
+              ([k, [a, b, c]]) =>
+                `<radialGradient id="p${k}" cx=".5" cy="1" r="1"><stop offset="0" stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient>` +
+                `<radialGradient id="c${k}" cx=".45" cy=".45" r=".62"><stop offset="0" stop-color="${a}"/><stop offset=".6" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient>`,
+            )
+            .join("") +
+          '<filter id="wc" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="3" result="n"/>' +
+          '<feDisplacementMap in="SourceGraphic" in2="n" scale="8" xChannelSelector="R" yChannelSelector="G"/></filter>' +
+          '<filter id="wcS" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="8" result="n"/>' +
+          '<feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>' +
+          '<filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter>' +
+          "</defs>";
+
+        // --- langit ---
+        let art =
+          '<rect width="1000" height="2000" fill="url(#sky)"/>' +
+          '<circle cx="790" cy="760" r="180" fill="url(#sun)"/>' +
+          '<g filter="url(#soft)" fill="#FFFFFF" opacity=".75">' +
+          [
+            [230, 330, 120, 30],
+            [330, 312, 80, 24],
+            [720, 250, 130, 32],
+            [830, 272, 90, 24],
+            [580, 520, 110, 22],
+            [160, 590, 90, 20],
+          ]
+            .map(
+              ([x, y, rx, ry]) =>
+                `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`,
+            )
+            .join("") +
+          "</g>" +
+          '<g fill="none" stroke="#5A474C" stroke-width="2.2" stroke-linecap="round" opacity=".38">' +
+          '<path d="M612 640q10-10 20 0q10-10 20 0"/><path d="M668 676q7-7 14 0q7-7 14 0"/></g>';
+
+        // --- bukit & tanah ---
+        art +=
+          '<path d="M0 840C140 770 280 800 430 812C580 824 700 760 840 772C920 779 970 800 1000 810V1000H0Z" fill="#D7DEC0" opacity=".6" filter="url(#soft)"/>' +
+          '<path d="M0 900C180 850 330 880 500 892C680 904 820 850 1000 868V1000H0Z" fill="#C4CFA5" opacity=".5" filter="url(#soft)"/>' +
+          '<path d="M0 930C200 900 420 925 600 918C780 911 900 900 1000 905V2000H0Z" fill="url(#ground)"/>';
+        art += '<g filter="url(#soft)">';
+        for (let i = 0; i < 45; i++) {
+          art +=
+            `<ellipse cx="${f(r(0, 1000))}" cy="${f(r(950, 1980))}" rx="${f(r(60, 160))}" ry="${f(r(18, 48))}" ` +
+            `fill="${pick(["#C9D3AD", "#DDE4C8", "#F4D9DD", "#E8C7C8"])}" opacity="${f(r(0.18, 0.35) * 100) / 100}"/>`;
+        }
+        art += "</g>";
+        for (let i = 0; i < 70; i++)
+          art += blossom(
+            r(10, 990),
+            r(1000, 1990),
+            r(4, 7),
+            pick(["#F2C4CF", "#FFFFFF", "#E8C7C8", "#EAA4B4"]),
+          );
+
+        // --- jalan setapak yang menghubungkan ketiga tempat ---
+        const route = smooth([
+          [500, 2030],
+          [502, 1920],
+          [505, 1840],
+          [600, 1700],
+          [740, 1590],
+          [720, 1480],
+          [600, 1380],
+          [440, 1230],
+          [310, 1110],
+          [400, 1010],
+          [540, 940],
+        ]);
+        art +=
+          `<path d="${route}" fill="none" stroke="#EBD8C7" stroke-width="58" stroke-linecap="round" opacity=".55" filter="url(#soft)"/>` +
+          `<path d="${route}" fill="none" stroke="#F8EEE6" stroke-width="32" stroke-linecap="round" opacity=".9" filter="url(#wcS)"/>`;
+
+        // --- pepohonan di belakang bangunan ---
+        art +=
+          tree(110, 1090, 80, "cypress") +
+          tree(492, 1090, 72, "cypress") +
+          tree(880, 1080, 92) +
+          tree(505, 1452, 58, "cypress") +
+          tree(925, 1455, 84) +
+          tree(265, 1832, 80) +
+          tree(760, 1830, 70, "cypress");
+
+        // --- masjid (akad) ---
+        const minaret = (cx) =>
+          `<rect x="${cx - 12}" y="800" width="24" height="202" fill="#F8EEE8" stroke="#D9C1BA" stroke-width="1.5"/>` +
+          `<rect x="${cx - 17}" y="848" width="34" height="8" fill="#EFDCD6" stroke="#D9C1BA" stroke-width="1.2"/>` +
+          `<path d="M${cx - 12} 801C${cx - 12} 784 ${cx} 774 ${cx} 764C${cx} 774 ${cx + 12} 784 ${cx + 12} 801Z" fill="url(#dome)" stroke="#C3909E" stroke-width="1.5"/>` +
+          `<path d="M${cx} 764V748" stroke="#A9806F" stroke-width="2"/>`;
+        art +=
+          '<g transform="translate(0 88)" filter="url(#wcS)">' +
+          '<ellipse cx="300" cy="1004" rx="170" ry="14" fill="#BFA9A6" opacity=".22"/>' +
+          minaret(167) +
+          minaret(433) +
+          '<rect x="200" y="888" width="200" height="114" fill="#F8EEE8" stroke="#D9C1BA" stroke-width="2"/>' +
+          '<rect x="330" y="888" width="70" height="114" fill="#EBDCD5" opacity=".55"/>' +
+          '<rect x="190" y="876" width="220" height="14" fill="#F1DED8" stroke="#D9C1BA" stroke-width="1.5"/>' +
+          '<path d="M230 878C230 818 266 796 300 772C334 796 370 818 370 878Z" fill="url(#dome)" stroke="#C3909E" stroke-width="2"/>' +
+          '<path d="M300 772V744" stroke="#A9806F" stroke-width="3" stroke-linecap="round"/>' +
+          '<path d="M305 731a9 9 0 1 0 0 14a7 7 0 1 1 0-14z" fill="#A9806F"/>' +
+          '<path d="M281 1002V952a19 19 0 0 1 38 0v50Z" fill="#B57D8D"/>' +
+          '<path d="M224 960v-26a11 11 0 0 1 22 0v26ZM354 960v-26a11 11 0 0 1 22 0v26Z" fill="#CFA6B1" opacity=".85"/>' +
+          "</g>";
+        art +=
+          bush(240, 1094, 120, 5, "#EAA4B4") +
+          bush(372, 1094, 110, 5, "#D78D9F");
+
+        // --- paviliun taman (resepsi) ---
+        const rimY = (x) => {
+          const t = (x - 548) / 304;
+          return 1266 + 68 * t * (1 - t);
+        };
+        let gazebo =
+          '<g transform="translate(0 60)"><g filter="url(#wcS)">' +
+          '<ellipse cx="700" cy="1394" rx="185" ry="22" fill="#BFA9A6" opacity=".2"/>' +
+          '<ellipse cx="700" cy="1378" rx="152" ry="30" fill="#F6EAE2" stroke="#DCC5BA" stroke-width="2"/>';
+        [
+          [592, 1368],
+          [646, 1381],
+          [700, 1386],
+          [754, 1381],
+          [808, 1368],
+        ].forEach(([x, bottom]) => {
+          gazebo += `<rect x="${x - 5}" y="1264" width="10" height="${bottom - 1264}" fill="#FBF4EF" stroke="#DCC5BA" stroke-width="1.5"/>`;
+        });
+        gazebo +=
+          '<path d="M556 1268C590 1300 596 1330 584 1380L600 1380C606 1330 610 1296 600 1270Z" fill="#FFFFFF" opacity=".6"/>' +
+          '<path d="M844 1268C810 1300 804 1330 816 1380L800 1380C794 1330 790 1296 800 1270Z" fill="#FFFFFF" opacity=".6"/>' +
+          '<path d="M548 1266C598 1208 648 1158 700 1112C752 1158 802 1208 852 1266Z" fill="url(#roof)" stroke="#C27A8F" stroke-width="2"/>';
+        for (let x = 556; x < 840; x += 28)
+          gazebo += `<path d="M${x} ${f(rimY(x))}q14 14 28 0" fill="#F3D3DA" stroke="#D99AAA" stroke-width="1"/>`;
+        gazebo +=
+          '<path d="M548 1266Q700 1300 852 1266" fill="none" stroke="#C27A8F" stroke-width="7" stroke-linecap="round"/>' +
+          '<path d="M700 1112V1088" stroke="#A9806F" stroke-width="3"/><circle cx="700" cy="1083" r="6" fill="#A9806F"/>' +
+          '<path d="M592 1290Q619 1312 646 1290M646 1290Q673 1312 700 1290M700 1290Q727 1312 754 1290M754 1290Q781 1312 808 1290" fill="none" stroke="#E3A3B3" stroke-width="4"/>' +
+          '<path d="M852 1262Q890 1262 920 1228" fill="none" stroke="#B7A08F" stroke-width="1.5"/>' +
+          "</g>";
+        for (let i = 0; i < 4; i++)
+          gazebo += blossom(
+            619 + i * 54,
+            1300,
+            7,
+            i % 2 ? "#FFFFFF" : "#F6D3DA",
+          );
+        for (let i = 0; i < 7; i++) {
+          const t = i / 6;
+          gazebo += `<circle cx="${f(852 + 68 * t)}" cy="${f(1262 + (1 - t) * t * 2 * 16 - 34 * t * t)}" r="4" fill="#F6DDB0" opacity=".95"/>`;
+        }
+        gazebo +=
+          posy(566, 1380, 0.55, "blush") +
+          posy(834, 1380, 0.55, "dusty") +
+          "</g>";
+        art += gazebo;
+
+        // --- rumah joglo (ngunduh mantu) ---
+        art +=
+          '<g transform="translate(170 40)" filter="url(#wcS)">' +
+          '<ellipse cx="330" cy="1792" rx="190" ry="16" fill="#BFA9A6" opacity=".22"/>' +
+          '<rect x="180" y="1772" width="300" height="16" fill="#EAD9CB"/>' +
+          '<rect x="205" y="1690" width="250" height="84" fill="#F7ECE2" stroke="#D8C1B2" stroke-width="2"/>' +
+          '<rect x="380" y="1690" width="75" height="84" fill="#EBDCCF" opacity=".55"/>' +
+          '<path d="M158 1696L222 1640H438L502 1696Z" fill="#B98A73" stroke="#9C7462" stroke-width="2"/>' +
+          '<path d="M238 1642L290 1586H370L422 1642Z" fill="#9C7462" stroke="#7E5A4C" stroke-width="2"/>' +
+          '<path d="M286 1586H374" stroke="#7E5A4C" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M184 1676H476M204 1658H456" stroke="#A98069" stroke-width="1.2" opacity=".6"/>' +
+          '<rect x="310" y="1716" width="40" height="58" fill="#A27866"/>' +
+          '<path d="M330 1716V1774" stroke="#8C6455" stroke-width="1.5"/>' +
+          '<rect x="232" y="1712" width="34" height="28" fill="#CDA592" stroke="#A98069" stroke-width="1.2"/>' +
+          '<rect x="394" y="1712" width="34" height="28" fill="#CDA592" stroke="#A98069" stroke-width="1.2"/>' +
+          '<path d="M249 1712V1740M232 1726H266M411 1712V1740M394 1726H428" stroke="#A98069" stroke-width="1.2"/>' +
+          "</g>";
+        // janur kuning di depan rumah
+        art +=
+          '<g fill="none" stroke-linecap="round" opacity=".9">' +
+          '<path d="M690 1832C686 1752 690 1692 714 1642C730 1608 720 1582 696 1572" stroke="#C9AE7A" stroke-width="5"/>';
+        [
+          [696, 1572],
+          [708, 1580],
+          [718, 1592],
+          [724, 1607],
+          [726, 1622],
+          [723, 1638],
+        ].forEach(([x, y], i) => {
+          art += `<path d="M${x} ${y}q${i % 2 ? 7 : -5} 30 ${i % 2 ? -1 : 3} ${58 - i * 4}" stroke="#D9C38F" stroke-width="2"/>`;
+        });
+        art += "</g>";
+        art +=
+          bush(400, 1834, 110, 5, "#EAA4B4") +
+          bush(612, 1834, 100, 5, "#E8C7C8");
+
+        // --- sulur di tepi kiri & kanan ---
+        [
+          [300, 450, -0.1, 0],
+          [760, 420, 0.1, 1],
+          [1150, 420, -0.1, 0],
+          [1500, 300, 0.1, 1],
+        ].forEach(([y, len, bend, tone]) => {
+          art +=
+            sprig(10, y, len, 90, bend, 9, tone) +
+            sprig(990, y + 40, len, 90, -bend, 9, 1 - tone);
+        });
+        for (let i = 0; i < 8; i++) {
+          art += blossom(
+            r(8, 40),
+            r(320, 1650),
+            r(7, 10),
+            pick(["#F6D3DA", "#FFFFFF", "#E8C7C8"]),
+          );
+          art += blossom(
+            r(960, 992),
+            r(360, 1680),
+            r(7, 10),
+            pick(["#F6D3DA", "#FFFFFF", "#E8C7C8"]),
+          );
+        }
+
+        // --- rangkaian bunga di empat pojok ---
+        art +=
+          bouquet(62, 72, 1.1, 1, 15) +
+          bouquet(940, 78, 1.05, -1, -10) +
+          bouquet(70, 1950, 1.2, 1, -20) +
+          bouquet(935, 1945, 1.2, -1, 10);
+
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${PAINT_W * scale}" height="${PAINT_H * scale}" viewBox="0 0 ${PAINT_W} ${PAINT_H}">${defs}${art}</svg>`;
+      }
+
+      /* =========================================================
+   C. KAMERA
+   Lukisan tidak bergerak. Yang berpindah adalah "kamera":
+   titik tengah (x, y) dan lebar pandangan (w) di atas lukisan.
+   ========================================================= */
+      const app = document.getElementById("app");
+      const canvas = document.getElementById("stage");
+      const ctx = canvas.getContext("2d");
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      let source = null; // gambar lukisan yang sudah siap digambar
+      let sourceScale = 1; // berapa piksel gambar untuk 1 unit koordinat lukisan
+      let W = 1,
+        H = 1; // ukuran layar (piksel CSS)
+      let cam = { x: 500, y: 1000, w: 1000 };
+      let current = 0;
+      let flying = false;
+      let opened = false;
+      let rafId = 0;
+      let wheelLockUntil = 0;
+
+      const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const easeInOut = (t) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+      // Lebar pandangan saat zoom = 1: sebesar mungkin, tapi tetap di dalam lukisan
+      function baseWidth() {
+        const aspect = W / H;
+        return aspect < PAINT_W / PAINT_H ? PAINT_H * aspect : PAINT_W;
+      }
+
+      // Jaga agar kamera tidak keluar dari tepi lukisan
+      function clampCam(c) {
+        const w = Math.min(c.w, baseWidth());
+        const h = (w * H) / W;
+        return {
+          w,
+          x: clamp(c.x, w / 2, PAINT_W - w / 2),
+          y: clamp(c.y, h / 2, PAINT_H - h / 2),
+        };
+      }
+
+      // Posisi kamera untuk scene ke-i
+      function cameraFor(i) {
+        const s = SCENES[i];
+        const w = baseWidth() / s.zoom;
+        const h = (w * H) / W;
+        // Teks ada di bagian atas layar. Saat zoom, bangunan diturunkan ke sekitar
+        // dua pertiga tinggi layar; saat melihat seluruh lukisan, cukup sedikit.
+        const y = s.y - h * (s.zoom > 1 ? 0.16 : 0.06);
+        return clampCam({ x: s.x, y, w });
+      }
+
+      function render() {
+        if (!source) return;
+        const h = (cam.w * H) / W;
+        const left = cam.x - cam.w / 2;
+        const top = cam.y - h / 2;
+        ctx.drawImage(
+          source,
+          left * sourceScale,
+          top * sourceScale,
+          cam.w * sourceScale,
+          h * sourceScale,
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        );
+        placeHotspots(left, top, W / cam.w);
+      }
+
+      // Terbang dari posisi kamera sekarang ke scene ke-i
+      function flyTo(i, opts = {}) {
+        const from = { ...cam };
+        const to = cameraFor(i);
+        const dist = Math.hypot(to.x - from.x, to.y - from.y);
+        const duration = reduceMotion
+          ? 0
+          : (opts.duration ?? 1400 + Math.min(1000, dist * 1.4));
+        // "dip": seberapa jauh kamera mundur di tengah perjalanan, supaya terasa terbang
+        const dip =
+          opts.dip ?? Math.min(0.9, (dist / Math.max(from.w, to.w)) * 0.55);
+        const ease = opts.ease || easeInOut;
+
+        current = i;
+        flying = true;
+        hidePanels();
+        updateDots();
+        cancelAnimationFrame(rafId);
+
+        const start = performance.now();
+        const step = (now) => {
+          const t = duration ? Math.min(1, (now - start) / duration) : 1;
+          const e = ease(t);
+          const w =
+            from.w *
+            Math.pow(to.w / from.w, e) *
+            (1 + dip * Math.sin(Math.PI * t));
+          cam = clampCam({
+            x: lerp(from.x, to.x, e),
+            y: lerp(from.y, to.y, e),
+            w,
+          });
+          render();
+          if (t < 1) {
+            rafId = requestAnimationFrame(step);
+          } else {
+            flying = false;
+            wheelLockUntil = performance.now() + 450;
+            showPanel(i);
+            requestAnimationFrame(render);
+          }
+        };
+        rafId = requestAnimationFrame(step);
+      }
+
+      function go(delta) {
+        if (!opened) return;
+        const next = clamp(current + delta, 0, SCENES.length - 1);
+        if (next !== current) flyTo(next);
+      }
+
+      /* =========================================================
+   D. TEKS, TITIK KETUK, DAN NAVIGASI
+   ========================================================= */
+      const panels = [...document.querySelectorAll("[data-panel]")].sort(
+        (a, b) => a.dataset.panel - b.dataset.panel,
+      );
+
+      function hidePanels() {
+        panels.forEach((p) => {
+          p.classList.remove("is-visible");
+          p.inert = true;
+        });
+      }
+      function showPanel(i) {
+        panels[i].inert = false;
+        panels[i].classList.add("is-visible");
+      }
+
+      // Titik ketuk dibuat dari data HOTSPOTS
+      const hotspotLayer = document.getElementById("hotspots");
+      const hotspotEls = HOTSPOTS.map((hs) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "hotspot";
+        b.tabIndex = -1;
+        b.innerHTML =
+          '<span class="hotspot__dot" aria-hidden="true"></span><span class="hotspot__label"></span>';
+        b.querySelector(".hotspot__label").textContent = SCENES[hs.scene].name;
+        b.addEventListener("click", () => flyTo(hs.scene));
+        hotspotLayer.appendChild(b);
+        return b;
+      });
+
+      // Tempelkan titik ketuk ke posisi bangunan di layar, sembunyikan kalau tertutup teks
+      function placeHotspots(left, top, k) {
+        const blockers = flying
+          ? []
+          : [...app.querySelectorAll(".panel.is-visible, .controls")].map(
+              (el) => el.getBoundingClientRect(),
+            );
+        const appRect = app.getBoundingClientRect();
+        hotspotEls.forEach((el, n) => {
+          const hs = HOTSPOTS[n];
+          const px = (hs.x - left) * k;
+          const py = (hs.y - top) * k;
+          el.style.transform = `translate(${px}px, ${py}px) translate(-50%, -14px)`;
+          const onScreen = px > 40 && px < W - 40 && py > 30 && py < H - 50;
+          const covered = blockers.some(
+            (rc) =>
+              px + appRect.left > rc.left - 50 &&
+              px + appRect.left < rc.right + 50 &&
+              py + appRect.top > rc.top - 56 &&
+              py + appRect.top < rc.bottom + 8,
+          );
+          const show =
+            opened && !flying && hs.scene !== current && onScreen && !covered;
+          el.classList.toggle("is-shown", show);
+          el.tabIndex = show ? 0 : -1;
+        });
+      }
+
+      // Titik navigasi di bawah
+      const dotsWrap = document.getElementById("dots");
+      const dotEls = SCENES.map((s, i) => {
+        const d = document.createElement("button");
+        d.type = "button";
+        d.className = "dot";
+        d.setAttribute("aria-label", "Ke " + s.name.toLowerCase());
+        d.addEventListener("click", () => {
+          if (opened && i !== current) flyTo(i);
+        });
+        dotsWrap.appendChild(d);
+        return d;
+      });
+      function updateDots() {
+        dotEls.forEach((d, i) => {
+          if (i === current) d.setAttribute("aria-current", "step");
+          else d.removeAttribute("aria-current");
+        });
+      }
+
+      document
+        .getElementById("prevBtn")
+        .addEventListener("click", () => go(-1));
+      document.getElementById("nextBtn").addEventListener("click", () => go(1));
+
+      // Tombol "Buka undangan". Musik dimulai di sini karena browser
+      // hanya mengizinkan suara setelah ada klik dari tamu.
+      document.getElementById("openBtn").addEventListener("click", () => {
+        opened = true;
+        app.classList.add("is-open");
+        playMusic();
+        flyTo(1);
+      });
+
+      // Ketuk bangunan langsung di lukisan
+      canvas.addEventListener("click", (e) => {
+        if (!opened || flying) return;
+        const rc = canvas.getBoundingClientRect();
+        const k = cam.w / W;
+        const h = (cam.w * H) / W;
+        const px = cam.x - cam.w / 2 + (e.clientX - rc.left) * k;
+        const py = cam.y - h / 2 + (e.clientY - rc.top) * k;
+        let best = null,
+          bestDist = 170;
+        HOTSPOTS.forEach((hs) => {
+          const d = Math.hypot(hs.x - px, hs.y - py);
+          if (d < bestDist) {
+            bestDist = d;
+            best = hs;
+          }
+        });
+        if (best && best.scene !== current) flyTo(best.scene);
+      });
+
+      // Geser (swipe) di HP: ke kiri/atas = lanjut, ke kanan/bawah = kembali
+      let touchStart = null;
+      app.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.touches.length === 1)
+            touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        },
+        { passive: true },
+      );
+      app.addEventListener(
+        "touchend",
+        (e) => {
+          if (!touchStart) return;
+          const t = e.changedTouches[0];
+          const dx = t.clientX - touchStart.x;
+          const dy = t.clientY - touchStart.y;
+          touchStart = null;
+          if (Math.max(Math.abs(dx), Math.abs(dy)) < 50) return;
+          const forward = Math.abs(dx) > Math.abs(dy) ? dx < 0 : dy < 0;
+          go(forward ? 1 : -1);
+        },
+        { passive: true },
+      );
+
+      // Roda mouse dan papan ketik di laptop
+      app.addEventListener(
+        "wheel",
+        (e) => {
+          if (
+            flying ||
+            performance.now() < wheelLockUntil ||
+            Math.abs(e.deltaY) < 25
+          )
+            return;
+          go(e.deltaY > 0 ? 1 : -1);
+        },
+        { passive: true },
+      );
+      document.addEventListener("keydown", (e) => {
+        if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key)) {
+          e.preventDefault();
+          go(1);
+        }
+        if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) {
+          e.preventDefault();
+          go(-1);
+        }
+      });
+
+      // Nama tamu dari link, contoh: ?to=Keluarga%20Bapak%20Ahmad
+      const guest = new URLSearchParams(location.search).get("to");
+      if (guest && guest.trim())
+        document.getElementById("guestName").textContent = guest
+          .trim()
+          .slice(0, 80);
+
+      /* =========================================================
+   E. MUSIK
+   Browser melarang suara diputar otomatis sebelum tamu mengklik
+   sesuatu, jadi musik dimulai dari tombol "Buka undangan".
+   ========================================================= */
+      const music = document.getElementById("music");
+      const musicBtn = document.getElementById("musicBtn");
+      let fadeTimer = 0;
+      let resumeOnReturn = false;
+
+      // Dipanggil setelah lukisan siap, supaya lukisan didahulukan saat memuat
+      function loadMusic() {
+        if (!MUSIC_URL) return;
+        music.src = MUSIC_URL;
+        musicBtn.hidden = false;
+      }
+
+      function setMusicButton(playing) {
+        musicBtn.classList.toggle("is-playing", playing);
+        musicBtn.setAttribute("aria-pressed", String(playing));
+        musicBtn.setAttribute(
+          "aria-label",
+          playing ? "Jeda musik" : "Putar musik",
+        );
+      }
+
+      // Volume naik perlahan. Catatan: iPhone mengabaikan pengaturan volume,
+      // jadi di iPhone musik langsung terdengar dengan volume penuh.
+      function fadeVolume(target, duration) {
+        clearInterval(fadeTimer);
+        const from = music.volume;
+        const start = performance.now();
+        fadeTimer = setInterval(() => {
+          const t = Math.min(1, (performance.now() - start) / duration);
+          music.volume = from + (target - from) * t;
+          if (t === 1) clearInterval(fadeTimer);
+        }, 50);
+      }
+
+      async function playMusic() {
+        if (!MUSIC_URL || !music.paused) return;
+        try {
+          music.volume = 0;
+          await music.play();
+          setMusicButton(true);
+          fadeVolume(0.7, 1800);
+        } catch (err) {
+          // File tidak ditemukan, atau browser menolak memutar suara
+          console.warn("Musik belum bisa diputar.", err);
+          setMusicButton(false);
+        }
+      }
+
+      function pauseMusic() {
+        clearInterval(fadeTimer);
+        music.pause();
+        setMusicButton(false);
+      }
+
+      musicBtn.addEventListener("click", () =>
+        music.paused ? playMusic() : pauseMusic(),
+      );
+
+      // Jeda saat tamu pindah aplikasi atau tab, lanjutkan saat kembali
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          resumeOnReturn = !music.paused;
+          music.pause();
+        } else if (resumeOnReturn) {
+          playMusic();
+        }
+      });
+
+      /* =========================================================
+   F. UKURAN LAYAR & MEMUAT LUKISAN
+   ========================================================= */
+      function resize() {
+        const rc = app.getBoundingClientRect();
+        W = Math.max(1, rc.width);
+        H = Math.max(1, rc.height);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        if (!flying) cam = cameraFor(current);
+        render();
+      }
+      new ResizeObserver(resize).observe(app);
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+      }
+
+      async function loadPainting() {
+        if (PAINTING_URL) {
+          const img = await loadImage(PAINTING_URL);
+          source = img;
+          sourceScale = img.naturalWidth / PAINT_W;
+          return;
+        }
+        // Lukisan sementara: SVG dipotret sekali ke kanvas tersembunyi,
+        // supaya saat kamera bergerak, browser cukup menggeser satu gambar.
+        const scale = (window.devicePixelRatio || 1) >= 1.5 ? 2 : 1.5;
+        const img = await loadImage(
+          "data:image/svg+xml;charset=utf-8," +
+            encodeURIComponent(paintingSVG(scale)),
+        );
+        const off = document.createElement("canvas");
+        off.width = PAINT_W * scale;
+        off.height = PAINT_H * scale;
+        off.getContext("2d").drawImage(img, 0, 0, off.width, off.height);
+        source = off;
+        sourceScale = scale;
+      }
+
+      function fallbackPainting() {
+        const off = document.createElement("canvas");
+        off.width = 100;
+        off.height = 200;
+        const c = off.getContext("2d");
+        const g = c.createLinearGradient(0, 0, 0, 200);
+        g.addColorStop(0, "#F5D3DB");
+        g.addColorStop(0.5, "#FFF9F8");
+        g.addColorStop(1, "#E3EAD0");
+        c.fillStyle = g;
+        c.fillRect(0, 0, 100, 200);
+        source = off;
+        sourceScale = 0.1;
+      }
+
+      (async function start() {
+        resize();
+        try {
+          await loadPainting();
+        } catch (err) {
+          console.warn("Lukisan gagal dimuat, memakai latar polos.", err);
+          fallbackPainting();
+        }
+        loadMusic();
+        document.getElementById("loading").classList.add("is-done");
+        // Pembukaan: kamera mulai agak dekat, lalu perlahan mundur memperlihatkan seluruh lukisan
+        const end = cameraFor(0);
+        cam = clampCam({ x: end.x, y: end.y + 60, w: end.w / 1.35 });
+        render();
+        flyTo(0, { duration: reduceMotion ? 0 : 2400, dip: 0, ease: easeOut });
+      })();
+    </script>
+  </body>
+</html>
